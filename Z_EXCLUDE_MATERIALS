@@ -1,0 +1,395 @@
+//*"-----------------------------------------------------------------------------*
+//*& Development ID:  ZDDE-00064252                                              *
+//*& Functional Spec: ZFSE-00064251                                              *
+//*&                                                                             *
+//*& Interface view for freight exclusion material                               *
+//*&-----------------------------------------------------------------------------*
+//*& Change Log:                                                                 *
+//*&                                                                             *
+//*& Init.          Who                Date         Text                         *
+//*& AMIREHA1    A.Harshitha       07-July-2025    1100271836 Initial Version    *
+//*------------------------------------------------------------------------------*
+@AccessControl.authorizationCheck:#CHECK
+@EndUserText.label: 'interface view'
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+@VDM.viewType: #BASIC
+define root view entity ZCOMV_I_EXCL_MTRL
+  as select from zcomv_excl_mtrl as excl_mtrl
+    inner join   makt            as makt  on excl_mtrl.matnr = makt.matnr
+    inner join   zconstants      as const on  const.repid = 'ZCOMV_I_EXCL_MTRL'
+                                          and const.const = 'SPRAS'
+                                          and const.value = makt.spras
+{
+  key excl_mtrl.matnr              as Matnr,
+      makt.maktx                   as Material_description,
+      @Semantics.user.createdBy: true
+      excl_mtrl.createdby          as createdby,
+      @Semantics.systemDateTime.createdAt: true
+      excl_mtrl.createdon          as createdon,
+      @Semantics.user.lastChangedBy: true
+      excl_mtrl.lastmodifiedby     as lastmodifiedby,
+      @Semantics.systemDateTime.lastChangedAt: true
+      excl_mtrl.lastchangedat      as lastchangedat,
+      @Semantics.systemDateTime.localInstanceLastChangedAt: true
+      excl_mtrl.locallastchangedat as locallastchangedat
+}
+
+
+//*"-----------------------------------------------------------------------------*
+//*& Development ID:  ZDDE-00064252                                              *
+//*& Functional Spec: ZFSE-00064251                                              *
+//*&                                                                             *
+//*& Consumption view for freight exclusion                                      *
+//*&-----------------------------------------------------------------------------*
+//*& Change Log:                                                                 *
+//*&                                                                             *
+//*& Init.          Who                Date         Text                         *
+//*& AMIREHA1    A.Harshitha       07-July-2024    1100271836 Initial Version    *
+//*------------------------------------------------------------------------------*
+@AccessControl.authorizationCheck: #CHECK
+@EndUserText.label: 'consumption view'
+@VDM.viewType: #CONSUMPTION
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+@Metadata.ignorePropagatedAnnotations: true
+@Metadata.allowExtensions: true
+define root view entity ZCOMV_C_EXCL_MTRL
+  provider contract transactional_query
+  as projection on ZCOMV_I_EXCL_MTRL
+
+{
+  key     Matnr,
+          Material_description,
+          createdby,
+          createdon,
+          lastmodifiedby,
+          lastchangedat,
+          locallastchangedat
+}
+
+
+//*"-----------------------------------------------------------------------------*
+//*& Development ID:  ZDDE-00064252                                              *
+//*& Functional Spec: ZFSE-00064251                                              *
+//*&                                                                             *
+//*& search help for materials exclusion                                         *
+//*&-----------------------------------------------------------------------------*
+//*& Change Log:                                                                 *
+//*&                                                                             *
+//*& Init.          Who                Date         Text                         *
+//*& AMIREHA1    A.Harshitha       07-July-2024    1100271836 Initial Version    *
+//*------------------------------------------------------------------------------*
+@AccessControl.authorizationCheck: #CHECK
+@EndUserText.label: 'Value help for Exclusion(ZDDE-00064252)'
+@VDM.viewType: #BASIC
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define root view entity ZCOMV_EXCL_MTRL_VH
+  as select from I_ProductText as _Product
+    inner join   zconstants    as const on  const.repid = 'ZCOMV_I_EXCL_MTRL'
+                                        and const.const = 'SPRAS'
+                                        and const.value = _Product.Language
+{
+  key _Product.Product     as Material,
+      _Product.ProductName as material_discription
+}
+
+
+//*"-----------------------------------------------------------------------------*
+//*& Development ID:  ZDDE-00064252                                              *
+//*& Functional Spec: ZFSE-00064251                                              *
+//*&                                                                             *
+//*& Behavior definition for Freight exclusion Materials                         *
+//*&-----------------------------------------------------------------------------*
+//*& Change Log:                                                                 *
+//*&                                                                             *
+//*& Init.          Who                Date         Text                         *
+//*& AMIREHA1    A.Harshitha        07-july-2025   1100271836  Initial Version   *
+//*------------------------------------------------------------------------------*
+managed implementation in class zbp_comv_i_excl_mtrl unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZCOMV_I_EXCL_MTRL
+persistent table zcomv_excl_mtrl
+draft table zcomv_excl_dt1
+lock master total etag lastchangedat
+authorization master ( instance )
+etag master locallastchangedat
+{
+  field ( mandatory : create, readonly : update ) Matnr;
+  field ( readonly ) Material_description, Createdby, Createdon, Lastmodifiedby, Lastchangedat, Locallastchangedat;
+  create;
+  update;
+  delete;
+  draft action Edit;
+  draft action Activate;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare;
+  mapping for ZCOMV_EXCL_MTRL
+  {
+    matnr = Matnr;
+    createdby = Createdby;
+    createdon = Createdon;
+    lastmodifiedby = Lastmodifiedby;
+    lastchangedat = Lastchangedat;
+    locallastchangedat = Locallastchangedat;
+
+  }
+}
+
+//*"-----------------------------------------------------------------------------*
+//*& Development ID:  ZDDE-00064252                                              *
+//*& Functional Spec: ZFSE-00064251                                              *
+//*&                                                                             *
+//*& Behavior definition for Freight exclusion Materials                         *
+//*&-----------------------------------------------------------------------------*
+//*& Change Log:                                                                 *
+//*&                                                                             *
+//*& Init.          Who                Date         Text                         *
+//*& AMIREHA1    A.Harshitha        07-july-2025   1100271836  Initial Version   *
+//*------------------------------------------------------------------------------*
+projection;
+strict ( 2 );
+use draft;
+
+define behavior for ZCOMV_C_EXCL_MTRL
+{
+  use create;
+  use update;
+  use delete;
+
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Resume;
+  use action Prepare;
+}
+
+//*Development ID:  ZDDE-00064252                                        *
+//*Functional Spec: ZFSE-00064251                                        *
+//*Description : Access control for ZCOMV_I_EXCL_MTRL                    *
+//*-----------------------------------------------------------------------
+//*Change Log:                                                           *
+//*----------------------------------------------------------------------*
+//* Who      Name             Date       CR            Text              *
+//* AMIREHA1  Harshitha   10-07-2025   1100271836  Initial Development   *
+//*----------------------------------------------------------------------*
+@EndUserText.label: 'Access Control for EXCL MTRL'
+@MappingRole: true
+define role ZCOMV_I_EXCL_MTRL {
+    grant
+        select
+            on
+                ZCOMV_I_EXCL_MTRL
+                    where
+                        ( ) = aspect pfcg_auth(S_TABU_NAM,ACTVT='03',TABLE = 'ZCOMV_EXCL_MTRL');
+                        
+}
+
+//*Development ID:  ZDDE-00064252                                        *
+//*Functional Spec: ZFSE-00064251                                        *
+//*Description : Access control for ZCOMV_C_EXCL_MTRL                    *
+//*-----------------------------------------------------------------------
+//*Change Log:                                                           *
+//*----------------------------------------------------------------------*
+//* Who      Name             Date       CR            Text              *
+//* AMIREHA1  Harshitha   10-07-2025   1100271836  Initial Development   *
+//*----------------------------------------------------------------------*
+@EndUserText.label: 'Access Control for EXCL MTRL'
+@MappingRole: true
+define role ZCOMV_C_EXCL_MTRL { 
+    grant
+        select
+            on
+                ZCOMV_C_EXCL_MTRL
+                    where
+                       inheriting conditions from entity ZCOMV_I_EXCL_MTRL;
+                        
+}
+
+//*Development ID:  ZDDE-00064252                                        *
+//*Functional Spec: ZFSE-00064251                                        *
+//*Description : Access control for ZCOMV_EXCL_MTRL_VH                   *
+//*-----------------------------------------------------------------------
+//*Change Log:                                                           *
+//*----------------------------------------------------------------------*
+//* Who      Name             Date       CR            Text              *
+//* AMIREHA1  Harshitha   10-07-2025   1100271836  Initial Development   *
+//*----------------------------------------------------------------------*
+@EndUserText.label: 'Access control for EXCL MTRL'
+@MappingRole: true
+define role ZCOMV_EXCL_MTRL_VH {
+    grant
+        select
+            on
+                ZCOMV_EXCL_MTRL_VH
+                    where
+                        ( ) = aspect pfcg_auth(Z_CDS_VIEW,ACTVT='03',DDLNAME='ZCOMV_EXCL_MTRL_VH');
+                        
+}
+
+//*"-----------------------------------------------------------------------------*
+//*& Development ID:  ZDDE-00064252                                              *
+//*& Functional Spec: ZFSE-00064251                                              *
+//*&                                                                             *
+//*&  Metadata extension for Freight exclusion materials                         *
+//*&-----------------------------------------------------------------------------*
+//*& Change Log:                                                                 *
+//*&                                                                             *
+//*& Init.          Who                Date         Text                         *
+//*& AMIREHA1    A.Harshitha       07-July-2025    1100271836 Initial Version    *
+//*------------------------------------------------------------------------------*
+@Metadata.layer:  #CUSTOMER
+@UI: {
+     headerInfo: { typeName: 'Maintain Freight Exclusion',
+     typeNamePlural:     'Maintain Freight material'
+          } }
+
+annotate view ZCOMV_C_EXCL_MTRL with
+{
+  @UI.facet   : [
+              {
+                id   :    'Maintain_Freight_Material',
+                purpose:  #STANDARD,
+                type :    #IDENTIFICATION_REFERENCE,
+                label:    'Maintain Freight Material'
+                         }
+                  ]
+  @UI: { lineItem: [{ position: 10 , label: 'Material' }],
+  identification: [{ position: 10, label: 'Material' }]}
+  @UI.selectionField: [{ position: 10}]
+  @EndUserText.label: 'Material Number'
+  @Consumption  : {filter: {mandatory: false, selectionType: #HIERARCHY_NODE},
+                   valueHelpDefinition: [{entity:{name: 'ZCOMV_EXCL_MTRL_VH', element: 'Material' },useForValidation: true ,
+                    additionalBinding: [{ localElement: 'Material_description',element: 'material_discription' ,usage: #RESULT  }]}]}  
+  Matnr;
+  
+
+  @UI: { lineItem:       [ { position: 20, importance: #LOW } ],
+         identification: [ { position: 20, label: 'Material Description' } ] }       
+  Material_description;
+  
+}
+
+
+
+*"-----------------------------------------------------------------------------*
+*& Development ID:  ZDDE-00064252                                              *
+*& Functional Spec: ZFSE-00064251                                              *
+*& Behavior Implementation class for ZCOMV_I_EXCL_MTRL                         *
+*&-----------------------------------------------------------------------------*
+*& Change Log:                                                                 *
+*&                                                                             *
+*& Init.          Who                Date         Text                         *
+*& AMIREHA1    A.Harshitha      12-July-2025    1100271836 Initial Version     *
+*------------------------------------------------------------------------------*
+CLASS lhc_zcomv_i_excl_mtrl DEFINITION INHERITING FROM cl_abap_behavior_handler.
+
+
+  PRIVATE SECTION.
+
+    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
+      IMPORTING keys REQUEST requested_authorizations FOR zcomv_i_excl_mtrl RESULT result.
+
+ENDCLASS.
+
+CLASS lhc_zcomv_i_excl_mtrl IMPLEMENTATION.
+  METHOD get_instance_authorizations.
+
+    DATA: lv_upd       TYPE abap_bool VALUE abap_false,
+          lt_update_t  TYPE TABLE FOR UPDATE zcomv_i_excl_mtrl,
+          lt_update_t1 TYPE TABLE FOR UPDATE zcomv_i_excl_mtrl,
+          lv_del       TYPE abap_bool VALUE abap_false.
+    CONSTANTS: lc_actvt    TYPE fieldname      VALUE 'ACTVT',
+               lc_02       TYPE activ_auth     VALUE '02',
+               lc_ddlname  TYPE fieldname      VALUE 'TABLE',
+               lc_ret_dlft TYPE fieldname      VALUE 'ZCOMV_EXCL_MTRL'.
+*- Reading the Entries of the entity
+    READ ENTITIES OF zcomv_i_excl_mtrl  IN LOCAL MODE
+    ENTITY zcomv_i_excl_mtrl
+    ALL FIELDS WITH CORRESPONDING #( keys )
+
+    RESULT DATA(lt_mtrl)
+    FAILED DATA(lt_failed).
+
+*- Checking if the internal table is not initial
+    IF lt_mtrl[] IS NOT INITIAL.
+
+*- Checking the authorization Object
+      AUTHORITY-CHECK OBJECT 'S_TABU_NAM'
+         ID lc_actvt  FIELD   lc_02
+         ID lc_ddlname  FIELD lc_ret_dlft.
+      IF sy-subrc <> 0.
+        lv_upd = abap_true.
+        lv_del = abap_true.
+      ENDIF.
+
+      LOOP AT lt_mtrl ASSIGNING FIELD-SYMBOL(<fs_dfltdet>).
+
+        APPEND VALUE #( LET upd_auth = COND #( WHEN lv_upd = abap_true THEN if_abap_behv=>auth-unauthorized
+                                                     ELSE if_abap_behv=>auth-allowed )
+                            del_auth = COND #( WHEN lv_del = abap_true THEN if_abap_behv=>auth-unauthorized
+                                                     ELSE if_abap_behv=>auth-allowed )
+                              IN
+                               %tky            = <fs_dfltdet>-%tky
+                               %update         = upd_auth
+                               %delete         = del_auth
+                            ) TO result.
+
+      ENDLOOP.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+@EndUserText.label: 'Exclude materials(ZDDE-00064252)'
+define service ZCOMV_C_EXCL_MTRL_SD {
+  expose ZCOMV_C_EXCL_MTRL as Exl_Mtrl;
+}
+
+
+DATABASE TABLES
+
+@EndUserText.label : 'Exclude Materials-Dropship Freight(ZDDE-00064252)'
+@AbapCatalog.enhancement.category : #EXTENSIBLE_ANY
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table zcomv_excl_mtrl {
+  key mandt : mandt not null;
+  key matnr : matnr not null;
+  include zops_st_changedet;
+
+}
+
+@EndUserText.label : 'Draft table for entity ZCOMV_I_EXCL_MTRL(ZDDE-00064252)'
+@AbapCatalog.enhancement.category : #EXTENSIBLE_ANY
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table zcomv_excl_dt1 {
+  key mandt            : mandt not null;
+  key matnr            : matnr not null;
+  material_description : maktx;
+  createdby            : syuname;
+  createdon            : timestampl;
+  lastmodifiedby       : syuname;
+  lastchangedat        : timestampl;
+  locallastchangedat   : timestampl;
+  "%admin"             : include sych_bdl_draft_admin_inc;
+
+}
